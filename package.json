@@ -1,6 +1,6 @@
 {
   "name": "ls-one",
-  "version": "1.0.19",
+  "version": "1.0.1-beta91.0",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -16,6 +16,7 @@
   "license": "ISC",
   "dependencies": {
     "cross-env": "^7.0.3",
+    "execa": "^5.1.0",
     "webpack": "4.46.0",
     "webpack-cli": "^4.10.0",
     "weixin-js-sdk": "^1.6.0"

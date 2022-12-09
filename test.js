@@ -1,6 +1,24 @@
+const execa = require('execa')
+const isEnvTest = (app_env) => {
+    return app_env === 'beta';
+};
+const isEnvProd = (app_env) => {
+    return app_env === 'prod';
+};
+const getPublishTag = (app_env) => {
+    let publishTag = '';
+    if (isEnvProd(app_env)) {
+        publishTag = '';
+    }
+    if (isEnvTest(app_env)) {
+        publishTag = 'beta';
+    }
+    return publishTag;
+};
+// const app_env = 'beta';
+
 const getVersions = (versions, env) => {
     const vs = versions && (Array.isArray(versions) ? versions : [versions]);
-    console.log(vs);
     // 没有发布过包的情况
     if (!vs || !vs.length) {
         let version = '';
@@ -25,24 +43,68 @@ const getVersions = (versions, env) => {
         if (!lastVer) {
             lastVer = '1.0.0';
         }
+        // prod ==> 当筛选出来的版本号不是正常的线上版本的话  重新规定版本  主版本号+1，  是正常版本的话，就往下进行 兼容已经存在的版本
+        const b = lastVer.split('.');
+        const b1 = b[0];
+        const b3 = b[2];
+        if (b3 && b3 != 0 && !Number(b[2])) {
+            lastVer = `${Number(b1) + 1}.0.0`;
+        }
         return lastVer;
     }
     return vs.pop();
+};
 
-    // 发布过包的情况
-};
-const isEnvTest = (app_env) => {
-    return app_env === 'beta';
-};
-const isEnvProd = (app_env) => {
-    return app_env === 'prod';
-};
-let a = getVersions(['1.0.1-beta9', '1.2.0', '1.2.0-rx.0'], 'prod');
-const b = a.split('.');
-const b1 = b[0];
-const b3 = b[2];
-if (b3 && b3 != 0 && !Number(b[2])) {
-    console.log(123);
-    a = `${Number(b[0])+1}.0.0`;
+// let version = getVersions(['1.0.2-beta.1', '1.2.0', '2.2.99'], app_env);
+
+// console.log(version);
+
+function dumpVersion(version, channel = '', maxV = 99) {
+    if (isEnvTest(channel)) {
+        const oldV = version;
+        let a = oldV.split('.');
+        let b = a[2].split('-');
+        a[2] = [...b];
+        if (a[a.length - 1] >= maxV) {
+            a[a.length - 2][0]++;
+            a[a.length - 1] = 0;
+        } else {
+            a[a.length - 1]++;
+        }
+        a[2] = a[2].join('-');
+        return a.join('.');
+    }
+    const oldV = version;
+    let a = oldV.split('.');
+    if (a[a.length - 1] >= maxV) {
+        a[a.length - 2]++;
+        a[a.length - 1] = 0;
+    } else {
+        a[a.length - 1]++;
+    }
+    return a.join('.');
 }
-console.log(a);
+
+// const publishTag = getPublishTag(app_env)
+// const new_verison = dumpVersion(version, publishTag);
+
+// if(publishTag){
+//     console.log('publishTag')
+// }else {
+//     console.log('np publishTag')
+// }
+// console.log(new_verison);
+
+const upDatePkg = async () => {
+    const app_env = 'prod';
+    const checkMaster = await execa('git', ['checkout', 'master']);
+    console.log('master分支检出完毕')
+    const versionExeca = await execa('npm',['info', 'ls-one', 'versions', '--json'])
+    let version = getVersions(JSON.parse(versionExeca.stdout), app_env);
+    console.log(version)
+    const publishTag = getPublishTag(app_env)
+    console.log(publishTag)
+    const new_verison = dumpVersion(version, publishTag);
+    console.log(new_verison)
+}
+upDatePkg()
