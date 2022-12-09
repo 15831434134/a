@@ -66,36 +66,36 @@ const getVersions = (versions, env) => {
         // const checkMaster = await execFileSync('git', ['checkout', '--track', 'origin/master'], {
         //     encoding: 'utf-8'
         // });
-        // const checkMaster = await execFileSync('git', ['checkout', 'master'], {
-        //     encoding: 'utf-8'
-        // });
-        // console.log('master分支检出完毕', checkMaster);
+        const checkMaster = await execFileSync('git', ['checkout', 'master'], {
+            encoding: 'utf-8'
+        });
+        console.log('master分支检出完毕', checkMaster);
         // 获取环境标识
-        const getPublishTag = publishTag(env);
-        console.log(getPublishTag);
-        const versionList = await JSON.parse(
-            execFileSync('npm.cmd', ['info', 'ls-one', 'versions', '--json'], { encoding: 'utf-8' })
-        );
+        // const getPublishTag = publishTag(env);
+        // console.log(getPublishTag);
+        // const versionList = await JSON.parse(
+        //     execFileSync('npm.cmd', ['info', 'ls-one', 'versions', '--json'], { encoding: 'utf-8' })
+        // );
         // 版本处理
-        getVersions(versionList, env);
-        // const code = JSON.parse(fs.readFileSync(`${resolve('package.json')}`, 'utf-8'));
-        // console.log('package解析完成');
-        // const { version = '1.0.0' } = code || '';
-        // if (!versionList) {
-        //     version = '1.0.0';
-        // }
-        // const new_version = dumpVersion(version);
-        // console.log('版本号更新完毕', new_version);
-        // const updateV = await execFileSync('yarn.cmd', ['version', '--new-version', new_version], {
-        //     encoding: 'utf-8'
-        // });
-        // console.log(updateV);
-        // const tag1 = execFileSync('git', ['push', '--tags'], { encoding: 'utf-8' });
-        // console.log('tag1创建完毕', tag1);
-        // const tag2 = execFileSync('git', ['push', '--follow-tags'], { encoding: 'utf-8' });
-        // console.log('tag1创建完毕', tag2);
-        // const publish = execFileSync('npm.cmd', ['publish'], { encoding: 'utf-8' });
-        // log(chalk.green(`${pkgInfo.name}项目==>包发布完毕${publish}`));
+        // getVersions(versionList, env);
+        const code = JSON.parse(fs.readFileSync(`${resolve('package.json')}`, 'utf-8'));
+        console.log('package解析完成');
+        const { version = '1.0.0' } = code || '';
+        if (!versionList) {
+            version = '1.0.0';
+        }
+        const new_version = dumpVersion(version);
+        console.log('版本号更新完毕', new_version);
+        const updateV = await execFileSync('yarn.cmd', ['version', '--new-version', new_version], {
+            encoding: 'utf-8'
+        });
+        console.log(updateV);
+        const tag1 = execFileSync('git', ['push', '--tags'], { encoding: 'utf-8' });
+        console.log('tag1创建完毕', tag1);
+        const tag2 = execFileSync('git', ['push', '--follow-tags'], { encoding: 'utf-8' });
+        console.log('tag1创建完毕', tag2);
+        const publish = execFileSync('npm.cmd', ['publish'], { encoding: 'utf-8' });
+        log(chalk.green(`${pkgInfo.name}项目==>包发布完毕${publish}`));
     } catch (error) {
         console.log(error);
     }
