@@ -1,6 +1,6 @@
 {
   "name": "ls-one",
-  "version": "3.0.15",
+  "version": "1.0.15",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -8,8 +8,6 @@
     "build": "webpack",
     "link": "npm link",
     "deploy:test": "cross-env NODE_ENV=beta npm run publish",
-    "deploy:rc": "cross-env NODE_ENV=rc npm run publish",
-    "deploy:next": "cross-env NODE_ENV=next npm run publish",
     "deploy:prod": "cross-env NODE_ENV=prod npm run publish",
     "publish": "node ./app.js"
   },
