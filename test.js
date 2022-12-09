@@ -1,4 +1,4 @@
-const execa = require('execa')
+const execa = require('execa');
 const isEnvTest = (app_env) => {
     return app_env === 'beta';
 };
@@ -96,15 +96,39 @@ function dumpVersion(version, channel = '', maxV = 99) {
 // console.log(new_verison);
 
 const upDatePkg = async () => {
-    const app_env = 'prod';
-    const checkMaster = await execa('git', ['checkout', 'master']);
-    console.log('master分支检出完毕')
-    const versionExeca = await execa('npm',['info', 'ls-one', 'versions', '--json'])
-    let version = getVersions(JSON.parse(versionExeca.stdout), app_env);
-    console.log(version)
-    const publishTag = getPublishTag(app_env)
-    console.log(publishTag)
-    const new_verison = dumpVersion(version, publishTag);
-    console.log(new_verison)
-}
-upDatePkg()
+    try {
+        const app_env = 'beta';
+        const checkMaster = await execa('git', ['checkout', 'master']);
+        console.log('master分支检出完毕');
+        const versionExeca = await execa('npm', ['info', 'ls-one', 'versions', '--json']);
+
+        let version = getVersions(JSON.parse(versionExeca.stdout), app_env);
+        console.log(version);
+
+        const publishTag = getPublishTag(app_env);
+        console.log(publishTag);
+
+        const new_version = dumpVersion(version, publishTag);
+        console.log(new_version);
+
+        const updateV = await execa('yarn', ['version', '--new-version', new_version]);
+        console.log(1,updateV.stdout);
+
+        const tag1 = await execa('git', ['push', '--tags']);
+        console.log('tag1创建完毕', tag1.stdout);
+
+        const tag2 = await execa('git', ['push', '--follow-tags']);
+        console.log('tag1创建完毕', tag2.stdout);
+
+        if (publishTag) {
+            const goPublishTag = execa('npm', ['publish', '--tag', publishTag]);
+            console.log('goPublishTag', goPublishTag);
+        } else {
+            const nPpublishTag = execa('npm', ['publish']);
+            console.log('nPpublishTag', nPpublishTag);
+        }
+    } catch (error) {
+        console.log(error)
+    }
+};
+upDatePkg();

@@ -1639,6 +1639,17 @@ lru-cache@^5.1.1:
   dependencies:
     yallist "^3.0.2"
 
+ls-one@1.0.1-beta91.3:
+  version "1.0.1-beta91.3"
+  resolved "https://registry.yarnpkg.com/ls-one/-/ls-one-1.0.1-beta91.3.tgz#51c3124ef64f50b8dc31aaa2be28b5e15e912449"
+  integrity sha512-ivfMCToKyv0JC6gyhGbKOu4pRKaPtWPjdOshQPWYWgDddTOIw78SQvkeZTbT4diSQWtI73f8KiIztCotpypfhQ==
+  dependencies:
+    cross-env "^7.0.3"
+    execa "^5.1.0"
+    webpack "4.46.0"
+    webpack-cli "^4.10.0"
+    weixin-js-sdk "^1.6.0"
+
 make-dir@^2.0.0:
   version "2.1.0"
   resolved "https://registry.npmjs.org/make-dir/-/make-dir-2.1.0.tgz"
