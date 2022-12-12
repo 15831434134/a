@@ -31,7 +31,7 @@ const getVersions = (versions, env) => {
     }
     // 测试环境包
     if (isEnvTest(env)) {
-        let lastVer = vs.filter((item) => !!item.includes('beta')).pop();
+        let lastVer = vs.filter((item) => item.includes('beta')).pop();
         if (!lastVer) {
             lastVer = '1.0.0-beta.0';
         }
@@ -112,7 +112,7 @@ const upDatePkg = async () => {
         console.log(new_version);
 
         const updateV = await execa('yarn', ['version', '--new-version', new_version]);
-        console.log(1,updateV.stdout);
+        console.log(1, updateV.stdout);
 
         const tag1 = await execa('git', ['push', '--tags']);
         console.log('tag1创建完毕', tag1.stdout);
@@ -128,7 +128,7 @@ const upDatePkg = async () => {
             console.log('nPpublishTag', nPpublishTag);
         }
     } catch (error) {
-        console.log(error)
+        console.log(error);
     }
 };
 upDatePkg();
