@@ -1,24 +1,38 @@
 const execa = require('execa');
+const path = require('path');
+const fs = require('fs');
+
+const envEnum = {
+    beta: 'beta',
+    prod: 'prod'
+};
+
+const resolve = (dir) => {
+    return path.join(__dirname, `./${dir}`);
+};
+
 const isEnvTest = (app_env) => {
-    return app_env === 'beta';
+    return app_env === envEnum.beta;
 };
+
 const isEnvProd = (app_env) => {
-    return app_env === 'prod';
+    return app_env === envEnum.prod;
 };
+
 const getPublishTag = (app_env) => {
     let publishTag = '';
     if (isEnvProd(app_env)) {
         publishTag = '';
     }
     if (isEnvTest(app_env)) {
-        publishTag = 'beta';
+        publishTag = envEnum.beta;
     }
     return publishTag;
 };
-// const app_env = 'beta';
 
 const getVersions = (versions, env) => {
-    const vs = versions && (Array.isArray(versions) ? versions : [versions]);
+    const processVersion = versions.startsWith('[') ? JSON.parse(versions) : JSON.parse(JSON.stringify(versions));
+    const vs = processVersion && (Array.isArray(processVersion) ? processVersion : [processVersion]);
     // 没有发布过包的情况
     if (!vs || !vs.length) {
         let version = '';
@@ -31,7 +45,7 @@ const getVersions = (versions, env) => {
     }
     // 测试环境包
     if (isEnvTest(env)) {
-        let lastVer = vs.filter((item) => item.includes('beta')).pop();
+        let lastVer = vs.filter((item) => item.includes(envEnum.beta)).pop();
         if (!lastVer) {
             lastVer = '1.0.0-beta.0';
         }
@@ -39,93 +53,90 @@ const getVersions = (versions, env) => {
     }
     // 生产环境包
     if (isEnvProd(env)) {
-        let lastVer = vs.filter((item) => !item.includes('beta')).pop();
+        let lastVer = vs.filter((item) => !item.includes(envEnum.beta)).pop();
         if (!lastVer) {
             lastVer = '1.0.0';
         }
         // prod ==> 当筛选出来的版本号不是正常的线上版本的话  重新规定版本  主版本号+1，  是正常版本的话，就往下进行 兼容已经存在的版本
-        const b = lastVer.split('.');
-        const b1 = b[0];
-        const b3 = b[2];
-        if (b3 && b3 != 0 && !Number(b[2])) {
-            lastVer = `${Number(b1) + 1}.0.0`;
+        const processVer = lastVer.split('.');
+        const pv1 = processVer[0];
+        const pv3 = processVer[2];
+        if (pv3 && pv3 != 0 && !Number(pv3)) {
+            lastVer = `${Number(pv1) + 1}.0.0`;
         }
         return lastVer;
     }
     return vs.pop();
 };
 
-// let version = getVersions(['1.0.2-beta.1', '1.2.0', '2.2.99'], app_env);
-
-// console.log(version);
-
-function dumpVersion(version, channel = '', maxV = 99) {
+const dumpVersion = (version, channel = '', maxV = 99) => {
     if (isEnvTest(channel)) {
         const oldV = version;
-        let a = oldV.split('.');
-        let b = a[2].split('-');
-        a[2] = [...b];
-        if (a[a.length - 1] >= maxV) {
-            a[a.length - 2][0]++;
-            a[a.length - 1] = 0;
+        let processVer = oldV.split('.');
+        const processVerLen = processVer.length;
+        let pv2 = processVer[2].split('-');
+        processVer[2] = [...pv2];
+        if (processVer[processVerLen - 1] >= maxV) {
+            processVer[processVerLen - 2][0]++;
+            processVer[processVerLen - 1] = 0;
         } else {
-            a[a.length - 1]++;
+            processVer[processVerLen - 1]++;
         }
-        a[2] = a[2].join('-');
-        return a.join('.');
+        processVer[2] = processVer[2].join('-');
+        return processVer.join('.');
     }
     const oldV = version;
-    let a = oldV.split('.');
-    if (a[a.length - 1] >= maxV) {
-        a[a.length - 2]++;
-        a[a.length - 1] = 0;
+    let processVer = oldV.split('.');
+    const processVerLen = processVer.length;
+    if (processVer[processVerLen - 1] >= maxV) {
+        processVer[processVerLen - 2]++;
+        processVer[processVerLen - 1] = 0;
     } else {
-        a[a.length - 1]++;
+        processVer[processVerLen - 1]++;
     }
-    return a.join('.');
-}
-
-// const publishTag = getPublishTag(app_env)
-// const new_verison = dumpVersion(version, publishTag);
-
-// if(publishTag){
-//     console.log('publishTag')
-// }else {
-//     console.log('np publishTag')
-// }
-// console.log(new_verison);
+    return processVer.join('.');
+};
 
 const upDatePkg = async () => {
     try {
-        const app_env = 'beta';
-        const checkMaster = await execa('git', ['checkout', 'master']);
-        console.log('master分支检出完毕');
-        const versionExeca = await execa('npm', ['info', 'ls-one', 'versions', '--json']);
+        const app_env = process.env.NODE_ENV;
 
-        let version = getVersions(JSON.parse(versionExeca.stdout), app_env);
-        console.log(version);
+        const checkMaster = await execa('git', ['checkout', 'master']);
+        // console.log('master===分支检出完毕');
+        console.log('分支检出完毕');
+
+        const pkgInfo = JSON.parse(fs.readFileSync(`${resolve('package.json')}`, 'utf-8'));
+        console.log('package.json读取完毕');
+
+        const versionExeca = await execa('npm', ['info', pkgInfo.name, 'versions', '--json']);
+        let version = getVersions(versionExeca.stdout, app_env);
+        console.log('最新版本号', version);
 
         const publishTag = getPublishTag(app_env);
-        console.log(publishTag);
+        console.log('tagName', publishTag);
 
         const new_version = dumpVersion(version, publishTag);
-        console.log(new_version);
+        console.log('新版本号', new_version);
 
         const updateV = await execa('yarn', ['version', '--new-version', new_version]);
-        console.log(1, updateV.stdout);
+        console.log('更新版本号', updateV.stdout);
 
         const tag1 = await execa('git', ['push', '--tags']);
-        console.log('tag1创建完毕', tag1.stdout);
+        // console.log('tags完毕', tag1);
+        console.log('tags完毕');
 
         const tag2 = await execa('git', ['push', '--follow-tags']);
-        console.log('tag1创建完毕', tag2.stdout);
+        // console.log('follow-tags完毕', tag2);
+        console.log('follow-tags完毕');
 
         if (publishTag) {
             const goPublishTag = execa('npm', ['publish', '--tag', publishTag]);
-            console.log('goPublishTag', goPublishTag);
+            // console.log('goPublishTag', goPublishTag.stdout);
+            console.log('goPublishTag', publishTag);
         } else {
             const nPpublishTag = execa('npm', ['publish']);
-            console.log('nPpublishTag', nPpublishTag);
+            // console.log('nPpublishTag', nPpublishTag.stderr);
+            console.log('nPpublishTag', publishTag || 'prod');
         }
     } catch (error) {
         console.log(error);
