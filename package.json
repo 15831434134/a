@@ -1,6 +1,6 @@
 {
   "name": "ls-one",
-  "version": "3.0.19",
+  "version": "3.0.20",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -9,7 +9,7 @@
     "link": "npm link",
     "deploy:test": "cross-env NODE_ENV=beta npm run publish",
     "deploy:prod": "cross-env NODE_ENV=prod npm run publish",
-    "publish": "node ./app.js"
+    "publish": "node ./test.js"
   },
   "keywords": [],
   "author": "",
